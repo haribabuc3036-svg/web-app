@@ -83,72 +83,62 @@ export default function DarshanPage() {
         </div>
       </div>
 
-      <Card>
-        {isLoading ? (
-          <PageLoader />
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-gray-100">
-                  {['Date', 'Pilgrims', 'Tonsures', 'Hundi', 'Waiting', 'Darshan Time', 'Created', ''].map((h) => (
-                    <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50">
-                {rows.map((row) => (
-                  <tr key={row.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-4 py-3 font-medium text-gray-900">{row.date}</td>
-                    <td className="px-4 py-3 text-gray-600">{row.pilgrims}</td>
-                    <td className="px-4 py-3 text-gray-600">{row.tonsures}</td>
-                    <td className="px-4 py-3 text-gray-600">{row.hundi}</td>
-                    <td className="px-4 py-3 text-gray-600">{row.waiting}</td>
-                    <td className="px-4 py-3 text-gray-600">{row.darshan_time}</td>
-                    <td className="px-4 py-3 text-gray-400 text-xs">{formatDateTime(row.created_at)}</td>
-                    <td className="px-4 py-3">
-                      <Button variant="ghost" size="sm" onClick={() => openUpsert(row)}>
-                        Edit
-                      </Button>
-                    </td>
-                  </tr>
+      {isLoading ? (
+        <PageLoader />
+      ) : (
+        <div className="space-y-3">
+          {rows.map((row) => (
+            <Card key={row.id} className="p-4">
+              <div className="flex items-start justify-between gap-2 mb-3">
+                <div>
+                  <p className="font-semibold text-gray-900">{row.date}</p>
+                  <p className="text-xs text-gray-400 mt-0.5">{formatDateTime(row.created_at)}</p>
+                </div>
+                <Button variant="outline" size="sm" onClick={() => openUpsert(row)}>Edit</Button>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { label: 'Pilgrims', value: row.pilgrims },
+                  { label: 'Tonsures', value: row.tonsures },
+                  { label: 'Hundi', value: row.hundi },
+                  { label: 'Waiting', value: row.waiting },
+                  { label: 'Darshan Time', value: row.darshan_time },
+                ].map(({ label, value }) => (
+                  <div key={label} className="bg-gray-50 rounded-lg px-3 py-2">
+                    <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">{label}</p>
+                    <p className="text-sm font-medium text-gray-800 mt-0.5 truncate">{value || '—'}</p>
+                  </div>
                 ))}
-                {rows.length === 0 && (
-                  <tr>
-                    <td colSpan={8} className="px-4 py-8 text-center text-gray-400">
-                      No records found
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        )}
+              </div>
+            </Card>
+          ))}
+          {rows.length === 0 && (
+            <Card className="py-12 text-center text-gray-400 text-sm">No records found</Card>
+          )}
+        </div>
+      )}
 
-        {/* Pagination */}
-        {!isLoading && (
-          <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100">
-            <span className="text-xs text-gray-400">
-              Page {page} · {rows.length} records
-            </span>
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" disabled={page === 1} onClick={() => setPage((p) => p - 1)}>
-                ← Prev
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={rows.length < limit}
-                onClick={() => setPage((p) => p + 1)}
-              >
-                Next →
-              </Button>
-            </div>
+      {/* Pagination */}
+      {!isLoading && (
+        <div className="flex items-center justify-between">
+          <span className="text-xs text-gray-400">
+            Page {page} · {rows.length} records
+          </span>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" disabled={page === 1} onClick={() => setPage((p) => p - 1)}>
+              ← Prev
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={rows.length < limit}
+              onClick={() => setPage((p) => p + 1)}
+            >
+              Next →
+            </Button>
           </div>
-        )}
-      </Card>
+        </div>
+      )}
 
       {/* Upsert Modal */}
       <Modal

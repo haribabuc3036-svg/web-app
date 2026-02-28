@@ -119,52 +119,60 @@ export default function SsdLocationsPage() {
       {isLoading ? (
         <PageLoader />
       ) : (
-        <Card>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-gray-100">
-                  {['#', 'Name', 'Area', 'Timings', 'Tag', 'Sort', 'Status', ''].map((h) => (
-                    <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50">
-                {locations.map((loc) => (
-                  <tr key={loc.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 text-gray-400">{loc.id}</td>
-                    <td className="px-4 py-3 font-medium text-gray-900">
-                      <div className="flex items-center gap-2">
-                        {loc.image_url && (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={loc.image_url} alt={loc.name} className="w-8 h-8 rounded-md object-cover" />
-                        )}
-                        {loc.name}
+        <div className="space-y-3">
+          {locations.map((loc) => (
+            <Card key={loc.id} className="p-0 overflow-hidden">
+              <div className="flex gap-3 p-4">
+                {/* Image or placeholder */}
+                <div className="shrink-0">
+                  {loc.image_url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={loc.image_url} alt={loc.name} className="w-16 h-16 rounded-xl object-cover" />
+                  ) : (
+                    <div className="w-16 h-16 rounded-xl bg-gray-100 flex items-center justify-center">
+                      <ImageIcon size={22} className="text-gray-400" />
+                    </div>
+                  )}
+                </div>
+                {/* Info */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="font-semibold text-gray-900 truncate">{loc.name}</p>
+                      <p className="text-xs text-gray-500 truncate">{loc.area}</p>
+                    </div>
+                    {/* Actions */}
+                    <div className="flex gap-1 shrink-0">
+                      <Button variant="ghost" size="sm" title="Manage image" onClick={() => openImage(loc)}><Upload size={13} /></Button>
+                      <Button variant="ghost" size="sm" onClick={() => openEdit(loc)}><Pencil size={13} /></Button>
+                      <Button variant="ghost" size="sm" onClick={() => openDelete(loc)}><Trash2 size={13} className="text-red-500" /></Button>
+                    </div>
+                  </div>
+                  <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1">
+                    <div>
+                      <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Timings</p>
+                      <p className="text-xs text-gray-700">{loc.timings}</p>
+                    </div>
+                    {loc.note && (
+                      <div>
+                        <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Note</p>
+                        <p className="text-xs text-gray-700 truncate">{loc.note}</p>
                       </div>
-                    </td>
-                    <td className="px-4 py-3 text-gray-600">{loc.area}</td>
-                    <td className="px-4 py-3 text-gray-600">{loc.timings}</td>
-                    <td className="px-4 py-3">{loc.tag && <Badge variant="indigo">{loc.tag}</Badge>}</td>
-                    <td className="px-4 py-3 text-gray-400">{loc.sort_order}</td>
-                    <td className="px-4 py-3">
-                      <Badge variant={loc.is_active ? 'green' : 'red'}>{loc.is_active ? 'Active' : 'Inactive'}</Badge>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex gap-1">
-                        <Button variant="ghost" size="sm" onClick={() => openImage(loc)}><Upload size={13} /></Button>
-                        <Button variant="ghost" size="sm" onClick={() => openEdit(loc)}><Pencil size={13} /></Button>
-                        <Button variant="ghost" size="sm" onClick={() => openDelete(loc)}><Trash2 size={13} className="text-red-500" /></Button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-                {locations.length === 0 && (
-                  <tr><td colSpan={8} className="px-4 py-8 text-center text-gray-400">No locations yet</td></tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </Card>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2 mt-2">
+                    <Badge variant={loc.is_active ? 'green' : 'red'}>{loc.is_active ? 'Active' : 'Inactive'}</Badge>
+                    {loc.tag && <Badge variant="indigo">{loc.tag}</Badge>}
+                    <span className="text-[11px] text-gray-400 ml-auto">Sort: {loc.sort_order}</span>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          ))}
+          {locations.length === 0 && (
+            <Card className="py-12 text-center text-gray-400 text-sm">No locations yet</Card>
+          )}
+        </div>
       )}
 
       {/* Create Modal */}

@@ -180,45 +180,34 @@ export default function PlacesPage() {
             )}
           </div>
           {!selectedRegion ? (
-            <div className="p-12 text-center text-gray-400 text-sm">? Choose a region</div>
+            <div className="p-12 text-center text-gray-400 text-sm">👈 Choose a region</div>
           ) : placesLoading ? (
             <div className="p-8 text-center"><PageLoader /></div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-gray-100">
-                    {['Name', 'Description', 'Distance', ''].map((h) => (
-                      <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-50">
-                  {places.map((p) => (
-                    <tr key={p.id} className="hover:bg-gray-50">
-                      <td className="px-4 py-3 font-medium text-gray-900">{p.name}</td>
-                      <td className="px-4 py-3 text-gray-500 max-w-xs truncate text-xs">{p.description}</td>
-                      <td className="px-4 py-3 text-gray-600 text-xs">{p.distance_from_tirumala_km} km</td>
-                      <td className="px-4 py-3">
-                        <div className="flex gap-1">
-                          <Button variant="ghost" size="sm" title="Photos" onClick={() => { setSelectedPlace(p); setPlaceModal('photos'); }}>
-                            <ImageIcon size={13} />
-                          </Button>
-                          <Button variant="ghost" size="sm" onClick={() => { setSelectedPlace(p); setPlaceForm({ name: p.name, description: p.description, maps_url: p.maps_url, distance_from_tirumala_km: p.distance_from_tirumala_km, sort_order: p.sort_order }); setPlaceModal('edit'); }}>
-                            <Pencil size={13} />
-                          </Button>
-                          <Button variant="ghost" size="sm" onClick={() => { setSelectedPlace(p); setPlaceModal('delete'); }}>
-                            <Trash2 size={13} className="text-red-400" />
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                  {places.length === 0 && (
-                    <tr><td colSpan={4} className="px-4 py-8 text-center text-gray-400">No places</td></tr>
-                  )}
-                </tbody>
-              </table>
+            <div className="divide-y divide-gray-50">
+              {places.map((p) => (
+                <div key={p.id} className="flex items-start gap-3 px-4 py-3 hover:bg-gray-50 transition-colors">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900">{p.name}</p>
+                    <p className="text-xs text-gray-400 mt-0.5 line-clamp-2">{p.description}</p>
+                    <p className="text-xs text-gray-400 mt-0.5">{p.distance_from_tirumala_km} km from Tirumala</p>
+                  </div>
+                  <div className="flex gap-1 shrink-0">
+                    <Button variant="ghost" size="sm" title="Photos" onClick={() => { setSelectedPlace(p); setPlaceModal('photos'); }}>
+                      <ImageIcon size={13} />
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => { setSelectedPlace(p); setPlaceForm({ name: p.name, description: p.description, maps_url: p.maps_url, distance_from_tirumala_km: p.distance_from_tirumala_km, sort_order: p.sort_order }); setPlaceModal('edit'); }}>
+                      <Pencil size={13} />
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => { setSelectedPlace(p); setPlaceModal('delete'); }}>
+                      <Trash2 size={13} className="text-red-400" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+              {places.length === 0 && (
+                <div className="px-4 py-8 text-center text-gray-400 text-sm">No places</div>
+              )}
             </div>
           )}
         </Card>

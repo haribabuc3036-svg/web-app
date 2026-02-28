@@ -185,84 +185,73 @@ export default function ServicesPage() {
                   <span className="text-xs">Category image</span>
                 </Button>
               </div>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-gray-100">
-                      {['Icon', 'Title', 'Description', 'Tag', ''].map((h) => (
-                        <th key={h} className="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase tracking-wide">{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-50">
+              <div className="divide-y divide-gray-50">
                     {cat.services.map((s) => (
-                      <tr key={s.id} className="hover:bg-gray-50">
-                        <td className="px-4 py-2.5">
+                      <div key={s.id} className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors">
+                        {/* Icon */}
+                        <div className="shrink-0">
                           {s.iconImage ? (
                             // eslint-disable-next-line @next/next/no-img-element
-                            <img src={s.iconImage} alt={s.title} className="w-9 h-9 rounded-lg object-cover" />
+                            <img src={s.iconImage} alt={s.title} className="w-10 h-10 rounded-xl object-cover" />
                           ) : (
-                            <div className="w-9 h-9 rounded-lg bg-gray-100 flex items-center justify-center" title={s.icon}>
-                              <span className="text-[9px] font-mono text-gray-500 leading-none text-center px-0.5 break-all line-clamp-3">{s.icon}</span>
+                            <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center" title={s.icon}>
+                              <span className="text-[8px] font-mono text-gray-500 leading-none text-center px-0.5 break-all">{s.icon}</span>
                             </div>
                           )}
-                        </td>
-                        <td className="px-4 py-2.5 font-medium text-gray-900">{s.title}</td>
-                        <td className="px-4 py-2.5 text-gray-500 max-w-xs truncate">{s.description || '---'}</td>
-                        <td className="px-4 py-2.5">
-                          {s.tag ? (
-                            <span
-                              className="inline-block px-2 py-0.5 rounded text-xs font-medium text-white"
-                              style={{ backgroundColor: s.tagColor ?? '#6b7280' }}
-                            >
-                              {s.tag}
-                            </span>
-                          ) : (
-                            <span className="text-gray-400">---</span>
-                          )}
-                        </td>
-                        <td className="px-4 py-2.5">
-                          <div className="flex gap-1">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              title="Manage detail images"
-                              onClick={() => { setImagesTarget({ id: s.id, title: s.title }); setDetailImgFile(null); }}
-                            >
-                              <Images size={13} />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              title="Set booking date & instructions"
-                              onClick={() => setBookingTarget({ id: s.id, title: s.title })}
-                            >
-                              <Calendar size={13} />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => {
-                                setEditTarget({ ...s, categoryId: cat.id, categoryHeading: cat.heading });
-                                setForm({
-                                  title: s.title,
-                                  description: s.description,
-                                  tag: s.tag ?? '',
-                                  tag_color: s.tagColor ?? '',
-                                  icon: s.icon,
-                                });
-                                setIconFile(null);
-                              }}
-                            >
-                              <Pencil size={13} />
-                            </Button>
-                          </div>
-                        </td>
-                      </tr>
+                        </div>
+                        {/* Info */}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-900 truncate">{s.title}</p>
+                          <p className="text-xs text-gray-400 truncate">{s.description || '—'}</p>
+                        </div>
+                        {/* Tag */}
+                        {s.tag && (
+                          <span
+                            className="hidden sm:inline-block shrink-0 px-2 py-0.5 rounded text-xs font-medium text-white"
+                            style={{ backgroundColor: s.tagColor ?? '#6b7280' }}
+                          >
+                            {s.tag}
+                          </span>
+                        )}
+                        {/* Actions */}
+                        <div className="flex gap-1 shrink-0">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            title="Manage detail images"
+                            onClick={() => { setImagesTarget({ id: s.id, title: s.title }); setDetailImgFile(null); }}
+                          >
+                            <Images size={13} />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            title="Set booking date & instructions"
+                            onClick={() => setBookingTarget({ id: s.id, title: s.title })}
+                          >
+                            <Calendar size={13} />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setEditTarget({ ...s, categoryId: cat.id, categoryHeading: cat.heading });
+                              setForm({
+                                title: s.title,
+                                description: s.description,
+                                tag: s.tag ?? '',
+                                tag_color: s.tagColor ?? '',
+                                icon: s.icon,
+                              });
+                              setIconFile(null);
+                            }}
+                          >
+                            <Pencil size={13} />
+                          </Button>
+                        </div>
+                      </div>
                     ))}
-                  </tbody>
-                </table>
-              </div>
+                  </div>
             </Card>
           ))}
           {filteredCategories.length === 0 && (
