@@ -1,0 +1,10 @@
+{
+  "buildCommand": "next build",
+  "devCommand": "next dev",
+  "outputDirectory": ".next",
+  "framework": "nextjs",
+  "env": {
+    "NEXT_PUBLIC_API_URL": "@tirumala_api_url",
+    "NEXT_PUBLIC_COOKIE_NAME": "@tirumala_cookie_name"
+  }
+}
