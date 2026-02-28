@@ -30,6 +30,16 @@ export default function ServicesPage() {
   const [detailImgFile, setDetailImgFile] = useState<File | null>(null);
   const [search, setSearch] = useState('');
 
+  // Add / delete state
+  const [addServiceTarget, setAddServiceTarget] = useState<{ categoryId: string; categoryHeading: string } | null>(null);
+  const [showAddCategory, setShowAddCategory] = useState(false);
+  const [deleteServiceTarget, setDeleteServiceTarget] = useState<{ id: string; title: string } | null>(null);
+  const [deleteCategoryTarget, setDeleteCategoryTarget] = useState<{ id: string; heading: string; serviceIds: string[] } | null>(null);
+  const [newSvcForm, setNewSvcForm] = useState({ id: '', title: '', description: '', icon: '', tag: '', tag_color: '', url: '' });
+  const [newCatForm, setNewCatForm] = useState({ category_id: '', category_heading: '', category_icon: '', service_id: '', service_title: '' });
+
+  const toSlug = (s: string) => s.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+
   const { data, isLoading, refetch } = useQuery({
     queryKey: ['services'],
     queryFn: () => servicesApi.getCatalog(),
@@ -121,6 +131,39 @@ export default function ServicesPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const createSvc = useMutation({
+    mutationFn: (payload: Parameters<typeof servicesApi.createService>[0]) => servicesApi.createService(payload),
+    onSuccess: () => {
+      toast.success('Service created');
+      qc.invalidateQueries({ queryKey: ['services'] });
+      setAddServiceTarget(null);
+      setShowAddCategory(false);
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const deleteSvc = useMutation({
+    mutationFn: (id: string) => servicesApi.deleteService(id),
+    onSuccess: () => {
+      toast.success('Service deleted');
+      qc.invalidateQueries({ queryKey: ['services'] });
+      setDeleteServiceTarget(null);
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const deleteCat = useMutation({
+    mutationFn: async (serviceIds: string[]) => {
+      await Promise.all(serviceIds.map((id) => servicesApi.deleteService(id)));
+    },
+    onSuccess: () => {
+      toast.success('Category deleted');
+      qc.invalidateQueries({ queryKey: ['services'] });
+      setDeleteCategoryTarget(null);
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   const categories = data?.data ?? [];
   const totalServices = categories.reduce((n, cat) => n + cat.services.length, 0);
 
@@ -145,9 +188,17 @@ export default function ServicesPage() {
             TTD service catalog � {categories.length} categories, {totalServices} services
           </p>
         </div>
-        <Button variant="outline" size="sm" onClick={() => refetch()}>
-          <RefreshCw size={14} />Refresh
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            size="sm"
+            onClick={() => { setNewCatForm({ category_id: '', category_heading: '', category_icon: '', service_id: '', service_title: '' }); setShowAddCategory(true); }}
+          >
+            <Plus size={14} />Add Category
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => refetch()}>
+            <RefreshCw size={14} />Refresh
+          </Button>
+        </div>
       </div>
 
       <div className="relative max-w-xs">
@@ -175,15 +226,34 @@ export default function ServicesPage() {
                   <p className="text-xs font-semibold text-gray-600 uppercase tracking-wider">{cat.heading}</p>
                   <span className="text-xs text-gray-400">({cat.services.length})</span>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  title="Upload category image"
-                  onClick={() => { setUploadTarget({ categoryId: cat.id, categoryHeading: cat.heading }); setImgFile(null); }}
-                >
-                  <Upload size={13} />
-                  <span className="text-xs">Category image</span>
-                </Button>
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    title="Add service to this category"
+                    onClick={() => { setAddServiceTarget({ categoryId: cat.id, categoryHeading: cat.heading }); setNewSvcForm({ id: '', title: '', description: '', icon: '', tag: '', tag_color: '', url: '' }); }}
+                  >
+                    <Plus size={13} />
+                    <span className="text-xs hidden sm:inline">Add service</span>
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    title="Upload category image"
+                    onClick={() => { setUploadTarget({ categoryId: cat.id, categoryHeading: cat.heading }); setImgFile(null); }}
+                  >
+                    <Upload size={13} />
+                    <span className="text-xs hidden sm:inline">Category image</span>
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    title="Delete entire category"
+                    onClick={() => setDeleteCategoryTarget({ id: cat.id, heading: cat.heading, serviceIds: cat.services.map((s) => s.id) })}
+                  >
+                    <Trash2 size={13} className="text-red-400" />
+                  </Button>
+                </div>
               </div>
               <div className="divide-y divide-gray-50">
                     {cat.services.map((s) => (
@@ -247,6 +317,14 @@ export default function ServicesPage() {
                             }}
                           >
                             <Pencil size={13} />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            title="Delete service"
+                            onClick={() => setDeleteServiceTarget({ id: s.id, title: s.title })}
+                          >
+                            <Trash2 size={13} className="text-red-400" />
                           </Button>
                         </div>
                       </div>
@@ -506,6 +584,122 @@ export default function ServicesPage() {
                 <Upload size={14} />Upload
               </Button>
             </form>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Add Service Modal */}
+      <Modal open={!!addServiceTarget} onClose={() => setAddServiceTarget(null)} title={`Add Service to: ${addServiceTarget?.categoryHeading}`} size="lg">
+        <form
+          className="space-y-4"
+          onSubmit={(e) => {
+            e.preventDefault();
+            const slug = newSvcForm.id || toSlug(newSvcForm.title);
+            createSvc.mutate({
+              id: slug,
+              title: newSvcForm.title,
+              category_id: addServiceTarget!.categoryId,
+              category_heading: addServiceTarget!.categoryHeading,
+              description: newSvcForm.description || undefined,
+              icon: newSvcForm.icon || undefined,
+              tag: newSvcForm.tag || null,
+              tag_color: newSvcForm.tag_color || null,
+              url: newSvcForm.url || undefined,
+            });
+          }}
+        >
+          <Input label="Title *" value={newSvcForm.title} onChange={(e) => setNewSvcForm((f) => ({ ...f, title: e.target.value }))} required />
+          <Input
+            label="ID (auto-generated from title if blank)"
+            value={newSvcForm.id}
+            onChange={(e) => setNewSvcForm((f) => ({ ...f, id: e.target.value }))}
+            placeholder={toSlug(newSvcForm.title) || 'e.g. room-booking'}
+          />
+          <Textarea label="Description" value={newSvcForm.description} onChange={(e) => setNewSvcForm((f) => ({ ...f, description: e.target.value }))} rows={3} />
+          <div className="grid grid-cols-2 gap-3">
+            <Input label="Tag" value={newSvcForm.tag} onChange={(e) => setNewSvcForm((f) => ({ ...f, tag: e.target.value }))} />
+            <Input label="Tag Color" value={newSvcForm.tag_color} onChange={(e) => setNewSvcForm((f) => ({ ...f, tag_color: e.target.value }))} placeholder="#22c55e" />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <Input label="Icon (MaterialCommunityIcons)" value={newSvcForm.icon} onChange={(e) => setNewSvcForm((f) => ({ ...f, icon: e.target.value }))} placeholder="temple-hindu" />
+            <Input label="URL" value={newSvcForm.url} onChange={(e) => setNewSvcForm((f) => ({ ...f, url: e.target.value }))} placeholder="https://..." />
+          </div>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="outline" type="button" onClick={() => setAddServiceTarget(null)}>Cancel</Button>
+            <Button type="submit" loading={createSvc.isPending}><Plus size={14} />Create Service</Button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Add Category Modal */}
+      <Modal open={showAddCategory} onClose={() => setShowAddCategory(false)} title="Add New Category" size="lg">
+        <form
+          className="space-y-4"
+          onSubmit={(e) => {
+            e.preventDefault();
+            const catId = newCatForm.category_id || toSlug(newCatForm.category_heading);
+            const svcId = newCatForm.service_id || toSlug(newCatForm.service_title);
+            createSvc.mutate({
+              id: svcId,
+              title: newCatForm.service_title,
+              category_id: catId,
+              category_heading: newCatForm.category_heading,
+              icon: newCatForm.category_icon || undefined,
+            });
+          }}
+        >
+          <div className="border border-gray-100 rounded-lg p-3 space-y-3">
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Category</p>
+            <Input label="Heading *" value={newCatForm.category_heading} onChange={(e) => setNewCatForm((f) => ({ ...f, category_heading: e.target.value }))} required />
+            <Input
+              label="Category ID (auto-generated if blank)"
+              value={newCatForm.category_id}
+              onChange={(e) => setNewCatForm((f) => ({ ...f, category_id: e.target.value }))}
+              placeholder={toSlug(newCatForm.category_heading) || 'e.g. prasadam-booking'}
+            />
+            <Input label="Category Icon (MaterialCommunityIcons)" value={newCatForm.category_icon} onChange={(e) => setNewCatForm((f) => ({ ...f, category_icon: e.target.value }))} placeholder="temple-hindu" />
+          </div>
+          <div className="border border-gray-100 rounded-lg p-3 space-y-3">
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">First Service</p>
+            <Input label="Service Title *" value={newCatForm.service_title} onChange={(e) => setNewCatForm((f) => ({ ...f, service_title: e.target.value }))} required />
+            <Input
+              label="Service ID (auto-generated if blank)"
+              value={newCatForm.service_id}
+              onChange={(e) => setNewCatForm((f) => ({ ...f, service_id: e.target.value }))}
+              placeholder={toSlug(newCatForm.service_title) || 'e.g. special-entry-darshan'}
+            />
+          </div>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="outline" type="button" onClick={() => setShowAddCategory(false)}>Cancel</Button>
+            <Button type="submit" loading={createSvc.isPending}><Plus size={14} />Create Category</Button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Delete Service Confirm */}
+      <Modal open={!!deleteServiceTarget} onClose={() => setDeleteServiceTarget(null)} title="Delete Service" size="sm">
+        <div className="space-y-4">
+          <p className="text-sm text-gray-600">Are you sure you want to delete <strong>{deleteServiceTarget?.title}</strong>?</p>
+          <p className="text-xs text-gray-400">This permanently removes the service and all its associated data.</p>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setDeleteServiceTarget(null)}>Cancel</Button>
+            <Button className="bg-red-600 hover:bg-red-700 text-white" loading={deleteSvc.isPending} onClick={() => deleteSvc.mutate(deleteServiceTarget!.id)}>
+              <Trash2 size={14} />Delete
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Delete Category Confirm */}
+      <Modal open={!!deleteCategoryTarget} onClose={() => setDeleteCategoryTarget(null)} title="Delete Category" size="sm">
+        <div className="space-y-4">
+          <p className="text-sm text-gray-600">Delete category <strong>{deleteCategoryTarget?.heading}</strong>?</p>
+          <p className="text-xs text-gray-400">This will delete all {deleteCategoryTarget?.serviceIds.length} services in this category. This action cannot be undone.</p>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setDeleteCategoryTarget(null)}>Cancel</Button>
+            <Button className="bg-red-600 hover:bg-red-700 text-white" loading={deleteCat.isPending} onClick={() => deleteCat.mutate(deleteCategoryTarget!.serviceIds)}>
+              <Trash2 size={14} />Delete All
+            </Button>
           </div>
         </div>
       </Modal>

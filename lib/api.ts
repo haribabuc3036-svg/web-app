@@ -237,6 +237,26 @@ export const servicesApi = {
       fd
     );
   },
+
+  createService: (payload: {
+    id: string;
+    title: string;
+    category_id: string;
+    category_heading: string;
+    description?: string;
+    icon?: string;
+    tag?: string | null;
+    tag_color?: string | null;
+    url?: string;
+    sort_order?: number;
+  }) =>
+    req<{ success: boolean; data: ServiceCatalogItem }>('/api/services', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+
+  deleteService: (id: string) =>
+    req<{ success: boolean; deleted: boolean; id: string }>(`/api/services/${id}`, { method: 'DELETE' }),
 };
 
 // ─── Wallpapers ───────────────────────────────────────────────────────────────
