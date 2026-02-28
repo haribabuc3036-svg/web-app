@@ -282,28 +282,47 @@ export default function PlacesPage() {
         </div>
       </Modal>
 
-      <Modal open={placeModal === 'photos'} onClose={() => setPlaceModal(null)} title={`Photos: ${selectedPlace?.name}`} size="xl">
+      <Modal open={placeModal === 'photos'} onClose={() => setPlaceModal(null)} title={`Photos: ${selectedPlace?.name}`} size="lg">
         <div className="space-y-4">
-          <form className="flex items-end gap-2" onSubmit={(e) => { e.preventDefault(); uploadPhoto.mutate(); }}>
-            <div className="flex-1">
-              <label className="text-xs font-medium text-gray-500 block mb-1">Upload Photo</label>
-              <input type="file" accept="image/*" onChange={(e) => setPhotoFile(e.target.files?.[0] ?? null)}
-                className="text-sm text-gray-600 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:bg-indigo-50 file:text-indigo-700" />
+          {/* Photo grid */}
+          {photos.length === 0 ? (
+            <p className="text-sm text-gray-400 py-4 text-center">No photos yet</p>
+          ) : (
+            <div className="grid grid-cols-3 gap-3">
+              {photos.map((ph) => (
+                <div key={ph.id} className="relative group rounded-lg overflow-hidden border border-gray-100">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={ph.image_url} alt="place" className="w-full h-32 object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => deletePhoto.mutate(ph.id)}
+                    className="absolute top-1 right-1 p-1 rounded bg-red-500 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                    title="Delete photo"
+                  >
+                    <Trash2 size={12} />
+                  </button>
+                </div>
+              ))}
             </div>
-            <Button type="submit" size="sm" loading={uploadPhoto.isPending} disabled={!photoFile}>Upload</Button>
-          </form>
-          <div className="grid grid-cols-3 gap-2">
-            {photos.map((ph) => (
-              <div key={ph.id} className="relative group">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={ph.image_url} alt="place" className="w-full aspect-square object-cover rounded-lg" />
-                <button
-                  className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
-                  onClick={() => deletePhoto.mutate(ph.id)}
-                >x</button>
+          )}
+
+          {/* Upload new photo */}
+          <div className="border-t border-gray-100 pt-4">
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Add photo</p>
+            <form className="flex items-end gap-3" onSubmit={(e) => { e.preventDefault(); uploadPhoto.mutate(); }}>
+              <div className="flex-1">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setPhotoFile(e.target.files?.[0] ?? null)}
+                  className="w-full text-sm text-gray-600 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-indigo-50 file:text-indigo-700"
+                  required
+                />
               </div>
-            ))}
-            {photos.length === 0 && <p className="col-span-3 text-sm text-gray-400 py-4 text-center">No photos</p>}
+              <Button type="submit" loading={uploadPhoto.isPending} disabled={!photoFile}>
+                <ImageIcon size={14} />Upload
+              </Button>
+            </form>
           </div>
         </div>
       </Modal>

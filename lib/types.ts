@@ -73,6 +73,7 @@ export interface PlacePhoto {
 
 // ─── Services ─────────────────────────────────────────────────────────────────
 
+/** Flat DB row shape (used for update payloads) */
 export interface ServiceCatalogItem {
   id: string;
   category_id: string;
@@ -92,6 +93,53 @@ export interface ServiceCatalogItem {
   sort_order: number;
   created_at: string;
   updated_at: string;
+}
+
+/** Individual service inside a category (as returned by GET /api/services) */
+export interface ServiceItem {
+  id: string;
+  title: string;
+  description: string;
+  icon: string;
+  iconImage?: string;
+  url: string;
+  tag?: string;
+  tagColor?: string;
+}
+
+/** Nested category shape returned by GET /api/services */
+export interface ServiceCategoryResponse {
+  id: string;       // category_id
+  heading: string;  // category_heading
+  icon: string;
+  image?: string;
+  services: ServiceItem[];
+}
+
+/** Full service detail returned by GET /api/services/:id */
+export interface ServiceDetailResponse {
+  id: string;
+  categoryId: string;
+  categoryHeading: string;
+  title: string;
+  description: string;
+  icon: string;
+  iconImage?: string;
+  images: string[];
+  url: string;
+  tag?: string;
+  tagColor?: string;
+  bookingDate?: string | null;
+  instructions?: string[] | null;
+}
+
+/** Detail image returned by GET /api/services/:id/images */
+export interface ServiceImageAdminResponse {
+  id: number;
+  serviceId: string;
+  imageUrl: string;
+  publicId: string | null;
+  sortOrder: number;
 }
 
 // ─── Wallpapers ───────────────────────────────────────────────────────────────
