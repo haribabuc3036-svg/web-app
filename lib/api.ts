@@ -358,6 +358,11 @@ export const ssdLocationsApi = {
       fd
     );
   },
+
+  deleteImage: (id: number) =>
+    req<{ success: boolean; data: SsdLocation }>(`/api/ssd-locations/${id}/image`, {
+      method: 'DELETE',
+    }),
 };
 
 // ─── Scraper ──────────────────────────────────────────────────────────────────

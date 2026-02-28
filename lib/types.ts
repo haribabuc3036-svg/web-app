@@ -59,7 +59,7 @@ export interface Place {
   distance_from_tirumala_km: number;
   sort_order: number;
   created_at: string;
-  updated_at: string;
+  updated_at?: string;
 }
 
 export interface PlacePhoto {
@@ -170,10 +170,8 @@ export interface Faq {
 
 export interface DressCodeItem {
   id: number;
-  label: string;
-  description: string | null;
-  gender: string | null;
-  icon: string | null;
+  section: 'men' | 'women' | 'general';
+  content: string;
   sort_order: number;
   is_active: boolean;
   created_at: string;
@@ -183,7 +181,7 @@ export interface DressCodeItem {
 export interface DosDont {
   id: number;
   type: 'do' | 'dont';
-  text: string;
+  content: string;
   sort_order: number;
   is_active: boolean;
   created_at: string;

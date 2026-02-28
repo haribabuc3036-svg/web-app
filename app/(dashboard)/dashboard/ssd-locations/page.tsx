@@ -10,7 +10,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { PageLoader } from '@/components/ui/spinner';
 import { toast } from 'sonner';
-import { Plus, Pencil, Trash2, RefreshCw, Upload } from 'lucide-react';
+import { Plus, Pencil, Trash2, RefreshCw, Upload, Image as ImageIcon } from 'lucide-react';
 import type { SsdLocation } from '@/lib/types';
 
 const emptyForm: Partial<SsdLocation> = {
@@ -57,7 +57,22 @@ export default function SsdLocationsPage() {
 
   const uploadImage = useMutation({
     mutationFn: () => ssdLocationsApi.uploadImage(selected!.id, imageFile!),
-    onSuccess: () => { toast.success('Image uploaded'); qc.invalidateQueries({ queryKey: ['ssd-locations'] }); setModal(null); },
+    onSuccess: (res) => {
+      toast.success('Image uploaded');
+      qc.invalidateQueries({ queryKey: ['ssd-locations'] });
+      setSelected(res.data);
+      setImageFile(null);
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const deleteImage = useMutation({
+    mutationFn: () => ssdLocationsApi.deleteImage(selected!.id),
+    onSuccess: (res) => {
+      toast.success('Image removed');
+      qc.invalidateQueries({ queryKey: ['ssd-locations'] });
+      setSelected(res.data);
+    },
     onError: (e: Error) => toast.error(e.message),
   });
 
@@ -183,19 +198,57 @@ export default function SsdLocationsPage() {
         </div>
       </Modal>
 
-      {/* Image Upload Modal */}
-      <Modal open={modal === 'image'} onClose={() => setModal(null)} title={`Upload Image: ${selected?.name}`} size="sm">
-        <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); uploadImage.mutate(); }}>
-          <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium text-gray-700">Image</label>
-            <input type="file" accept="image/*" onChange={(e) => setImageFile(e.target.files?.[0] ?? null)}
-              className="text-sm text-gray-600 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-indigo-50 file:text-indigo-700" required />
+      {/* Image Modal */}
+      <Modal open={modal === 'image'} onClose={() => setModal(null)} title={`Image: ${selected?.name}`}>
+        <div className="space-y-5">
+          {/* Current image */}
+          <div>
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Current Image</p>
+            {selected?.image_url ? (
+              <div className="relative group w-full rounded-xl overflow-hidden border border-gray-100">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={selected.image_url} alt={selected.name} className="w-full h-48 object-cover" />
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <Button
+                    variant="danger"
+                    size="sm"
+                    loading={deleteImage.isPending}
+                    onClick={() => deleteImage.mutate()}
+                  >
+                    <Trash2 size={14} /> Remove
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center gap-2 w-full h-32 rounded-xl border-2 border-dashed border-gray-200 text-gray-400">
+                <ImageIcon size={28} />
+                <span className="text-xs">No image</span>
+              </div>
+            )}
           </div>
-          <div className="flex justify-end gap-2 pt-2">
-            <Button variant="outline" type="button" onClick={() => setModal(null)}>Cancel</Button>
-            <Button type="submit" loading={uploadImage.isPending} disabled={!imageFile}><Upload size={14} />Upload</Button>
+          {/* Upload new */}
+          <div className="border-t border-gray-100 pt-4">
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+              {selected?.image_url ? 'Replace Image' : 'Upload Image'}
+            </p>
+            <form
+              className="space-y-3"
+              onSubmit={(e) => { e.preventDefault(); uploadImage.mutate(); }}
+            >
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => setImageFile(e.target.files?.[0] ?? null)}
+                className="w-full text-sm text-gray-600 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-indigo-50 file:text-indigo-700"
+              />
+              <div className="flex justify-end">
+                <Button type="submit" loading={uploadImage.isPending} disabled={!imageFile}>
+                  <Upload size={14} /> Upload
+                </Button>
+              </div>
+            </form>
           </div>
-        </form>
+        </div>
       </Modal>
     </div>
   );

@@ -202,8 +202,8 @@ export default function ServicesPage() {
                             // eslint-disable-next-line @next/next/no-img-element
                             <img src={s.iconImage} alt={s.title} className="w-9 h-9 rounded-lg object-cover" />
                           ) : (
-                            <div className="w-9 h-9 rounded-lg bg-gray-100 flex items-center justify-center text-lg">
-                              {s.icon}
+                            <div className="w-9 h-9 rounded-lg bg-gray-100 flex items-center justify-center" title={s.icon}>
+                              <span className="text-[9px] font-mono text-gray-500 leading-none text-center px-0.5 break-all line-clamp-3">{s.icon}</span>
                             </div>
                           )}
                         </td>
@@ -425,16 +425,16 @@ export default function ServicesPage() {
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={editTarget.iconImage} alt="icon" className="w-12 h-12 rounded-lg object-cover" />
                 ) : (
-                  <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center text-2xl">
-                    {form.icon || '?'}
+                  <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center p-1" title={form.icon}>
+                    <span className="text-[8px] font-mono text-gray-500 leading-none text-center break-all">{form.icon || '?'}</span>
                   </div>
                 )}
               </div>
               <Input
-                label="Emoji / text icon"
+                label="Icon name (MaterialCommunityIcons)"
                 value={form.icon}
                 onChange={(e) => setForm((f) => ({ ...f, icon: e.target.value }))}
-                placeholder="e.g. 🕍"
+                placeholder="e.g. temple-hindu"
               />
             </div>
             <div className="flex items-center gap-2">
