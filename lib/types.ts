@@ -130,6 +130,8 @@ export interface ServiceDetailResponse {
   tag?: string;
   tagColor?: string;
   bookingDate?: string | null;
+  /** Full array of scheduled booking dates (ISO strings) for the year. */
+  bookingDates?: string[] | null;
   instructions?: string[] | null;
 }
 

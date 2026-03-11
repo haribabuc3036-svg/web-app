@@ -24,7 +24,7 @@ export default function ServicesPage() {
   const [bookingTarget, setBookingTarget] = useState<BookingTarget | null>(null);
   const [imagesTarget, setImagesTarget] = useState<ImagesTarget | null>(null);
   const [form, setForm] = useState<{ title: string; description: string; tag: string; tag_color: string; icon: string }>({ title: '', description: '', tag: '', tag_color: '', icon: '' });
-  const [bookingForm, setBookingForm] = useState<{ booking_date: string; instructions: string[] }>({ booking_date: '', instructions: [] });
+  const [bookingForm, setBookingForm] = useState<{ booking_dates: string[]; instructions: string[] }>({ booking_dates: [], instructions: [] });
   const [imgFile, setImgFile] = useState<File | null>(null);
   const [iconFile, setIconFile] = useState<File | null>(null);
   const [detailImgFile, setDetailImgFile] = useState<File | null>(null);
@@ -60,12 +60,18 @@ export default function ServicesPage() {
   useEffect(() => {
     if (bookingDetail?.data) {
       const d = bookingDetail.data;
+      // Prefer new bookingDates array; fall back to legacy single bookingDate
+      const dates: string[] = d.bookingDates
+        ? d.bookingDates.map((iso) => new Date(iso).toISOString().slice(0, 16))
+        : d.bookingDate
+        ? [new Date(d.bookingDate).toISOString().slice(0, 16)]
+        : [];
       setBookingForm({
-        booking_date: d.bookingDate ? new Date(d.bookingDate).toISOString().slice(0, 16) : '',
+        booking_dates: dates,
         instructions: d.instructions ?? [],
       });
     } else if (bookingTarget) {
-      setBookingForm({ booking_date: '', instructions: [] });
+      setBookingForm({ booking_dates: [], instructions: [] });
     }
   }, [bookingDetail, bookingTarget]);
 
@@ -121,7 +127,7 @@ export default function ServicesPage() {
   });
 
   const patchBooking = useMutation({
-    mutationFn: (payload: { booking_date?: string | null; instructions?: string[] | null }) =>
+    mutationFn: (payload: { booking_dates?: string[] | null; instructions?: string[] | null }) =>
       servicesApi.patchBooking(bookingTarget!.id, payload),
     onSuccess: () => {
       toast.success('Booking info saved');
@@ -349,36 +355,74 @@ export default function ServicesPage() {
           className="space-y-5"
           onSubmit={(e) => {
             e.preventDefault();
+            const validDates = bookingForm.booking_dates
+              .map((d) => d.trim())
+              .filter(Boolean)
+              .map((d) => new Date(d).toISOString());
             patchBooking.mutate({
-              booking_date: bookingForm.booking_date
-                ? new Date(bookingForm.booking_date).toISOString()
-                : null,
+              booking_dates: validDates.length > 0 ? validDates : null,
               instructions: bookingForm.instructions.length > 0
                 ? bookingForm.instructions.filter(Boolean)
                 : null,
             });
           }}
         >
-          <div className="space-y-1">
-            <label className="text-sm font-medium text-gray-700">Booking Date &amp; Time</label>
-            <div className="flex gap-2">
-              <input
-                type="datetime-local"
-                value={bookingForm.booking_date}
-                onChange={(e) => setBookingForm((f) => ({ ...f, booking_date: e.target.value }))}
-                className="flex-1 px-3 py-1.5 text-sm border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400"
-              />
-              {bookingForm.booking_date && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  type="button"
-                  onClick={() => setBookingForm((f) => ({ ...f, booking_date: '' }))}
-                >
-                  Clear
-                </Button>
-              )}
+          {/* ── Booking Dates ── */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-medium text-gray-700">
+                Booking Dates
+                <span className="ml-1.5 text-xs font-normal text-gray-400">(one per month / slot)</span>
+              </label>
+              <Button
+                variant="outline"
+                size="sm"
+                type="button"
+                onClick={() => setBookingForm((f) => ({ ...f, booking_dates: [...f.booking_dates, ''] }))}
+              >
+                <Plus size={13} />Add date
+              </Button>
             </div>
+            {bookingForm.booking_dates.length === 0 ? (
+              <p className="text-xs text-gray-400 py-2">No booking dates yet — click &quot;Add date&quot; to add one.</p>
+            ) : (
+              <div className="space-y-2">
+                {bookingForm.booking_dates.map((date, i) => (
+                  <div key={i} className="flex gap-2 items-center">
+                    <span className="text-xs font-medium text-gray-400 w-5 text-right shrink-0">{i + 1}.</span>
+                    <input
+                      type="datetime-local"
+                      value={date}
+                      onChange={(e) =>
+                        setBookingForm((f) => {
+                          const updated = [...f.booking_dates];
+                          updated[i] = e.target.value;
+                          return { ...f, booking_dates: updated };
+                        })
+                      }
+                      className="flex-1 px-3 py-1.5 text-sm border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400"
+                    />
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setBookingForm((f) => ({
+                          ...f,
+                          booking_dates: f.booking_dates.filter((_, j) => j !== i),
+                        }))
+                      }
+                      className="text-gray-400 hover:text-red-500 transition-colors"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                ))}
+                {bookingForm.booking_dates.length > 0 && (
+                  <p className="text-xs text-gray-400 pt-1">
+                    💡 Add one entry per month for the full year. The app automatically picks the next upcoming slot (or shows &quot;Open&quot; for 24 h after each date).
+                  </p>
+                )}
+              </div>
+            )}
           </div>
 
           <div className="space-y-2">
