@@ -22,6 +22,10 @@ import type {
   HealthStatus,
 } from './types';
 
+// In production (Vercel), NEXT_PUBLIC_API_URL should be set to '' (empty string)
+// so all /api/* calls go to the same Vercel domain and are proxied to the backend
+// via the rewrites in next.config.ts. In local dev, omit the var to fall back to
+// localhost:3000 direct calls.
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000';
 
 async function req<T>(
