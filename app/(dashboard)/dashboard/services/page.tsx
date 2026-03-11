@@ -24,7 +24,7 @@ export default function ServicesPage() {
   const [bookingTarget, setBookingTarget] = useState<BookingTarget | null>(null);
   const [imagesTarget, setImagesTarget] = useState<ImagesTarget | null>(null);
   const [form, setForm] = useState<{ title: string; description: string; tag: string; tag_color: string; icon: string }>({ title: '', description: '', tag: '', tag_color: '', icon: '' });
-  const [bookingForm, setBookingForm] = useState<{ booking_dates: string[]; instructions: string[] }>({ booking_dates: [], instructions: [] });
+  const [bookingForm, setBookingForm] = useState<{ booking_dates: string[]; instructions: string[]; button_text: string; button_url: string }>({ booking_dates: [], instructions: [], button_text: '', button_url: '' });
   const [imgFile, setImgFile] = useState<File | null>(null);
   const [iconFile, setIconFile] = useState<File | null>(null);
   const [detailImgFile, setDetailImgFile] = useState<File | null>(null);
@@ -69,9 +69,11 @@ export default function ServicesPage() {
       setBookingForm({
         booking_dates: dates,
         instructions: d.instructions ?? [],
+        button_text: d.buttonText ?? '',
+        button_url: d.buttonUrl ?? '',
       });
     } else if (bookingTarget) {
-      setBookingForm({ booking_dates: [], instructions: [] });
+      setBookingForm({ booking_dates: [], instructions: [], button_text: '', button_url: '' });
     }
   }, [bookingDetail, bookingTarget]);
 
@@ -127,7 +129,7 @@ export default function ServicesPage() {
   });
 
   const patchBooking = useMutation({
-    mutationFn: (payload: { booking_dates?: string[] | null; instructions?: string[] | null }) =>
+    mutationFn: (payload: { booking_dates?: string[] | null; instructions?: string[] | null; button_text?: string | null; button_url?: string | null }) =>
       servicesApi.patchBooking(bookingTarget!.id, payload),
     onSuccess: () => {
       toast.success('Booking info saved');
@@ -364,9 +366,37 @@ export default function ServicesPage() {
               instructions: bookingForm.instructions.length > 0
                 ? bookingForm.instructions.filter(Boolean)
                 : null,
+              button_text: bookingForm.button_text.trim() || null,
+              button_url: bookingForm.button_url.trim() || null,
             });
           }}
         >
+          {/* ── CTA Button ── */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-gray-700">Button Label</label>
+              <input
+                type="text"
+                placeholder="Check Availability"
+                value={bookingForm.button_text}
+                onChange={(e) => setBookingForm((f) => ({ ...f, button_text: e.target.value }))}
+                className="w-full px-3 py-1.5 text-sm border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400"
+              />
+              <p className="text-xs text-gray-400">Displayed on the app CTA button.</p>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-gray-700">Button URL</label>
+              <input
+                type="url"
+                placeholder="https://..."
+                value={bookingForm.button_url}
+                onChange={(e) => setBookingForm((f) => ({ ...f, button_url: e.target.value }))}
+                className="w-full px-3 py-1.5 text-sm border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400"
+              />
+              <p className="text-xs text-gray-400">Overrides the default service URL when set.</p>
+            </div>
+          </div>
+
           {/* ── Booking Dates ── */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
