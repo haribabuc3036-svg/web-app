@@ -200,7 +200,7 @@ export const servicesApi = {
       body: JSON.stringify(payload),
     }),
 
-  patchBooking: (id: string, payload: { booking_date?: string | null; instructions?: string[] | null }) =>
+  patchBooking: (id: string, payload: { booking_dates?: string[] | null; instructions?: string[] | null }) =>
     req<{ success: boolean; data: ServiceCatalogItem }>(`/api/services/${id}/booking`, {
       method: 'PATCH',
       body: JSON.stringify(payload),
