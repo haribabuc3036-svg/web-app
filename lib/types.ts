@@ -59,7 +59,7 @@ export interface Place {
   distance_from_tirumala_km: number;
   sort_order: number;
   created_at: string;
-  updated_at: string;
+  updated_at?: string;
 }
 
 export interface PlacePhoto {
@@ -73,6 +73,7 @@ export interface PlacePhoto {
 
 // ─── Services ─────────────────────────────────────────────────────────────────
 
+/** Flat DB row shape (used for update payloads) */
 export interface ServiceCatalogItem {
   id: string;
   category_id: string;
@@ -92,6 +93,53 @@ export interface ServiceCatalogItem {
   sort_order: number;
   created_at: string;
   updated_at: string;
+}
+
+/** Individual service inside a category (as returned by GET /api/services) */
+export interface ServiceItem {
+  id: string;
+  title: string;
+  description: string;
+  icon: string;
+  iconImage?: string;
+  url: string;
+  tag?: string;
+  tagColor?: string;
+}
+
+/** Nested category shape returned by GET /api/services */
+export interface ServiceCategoryResponse {
+  id: string;       // category_id
+  heading: string;  // category_heading
+  icon: string;
+  image?: string;
+  services: ServiceItem[];
+}
+
+/** Full service detail returned by GET /api/services/:id */
+export interface ServiceDetailResponse {
+  id: string;
+  categoryId: string;
+  categoryHeading: string;
+  title: string;
+  description: string;
+  icon: string;
+  iconImage?: string;
+  images: string[];
+  url: string;
+  tag?: string;
+  tagColor?: string;
+  bookingDate?: string | null;
+  instructions?: string[] | null;
+}
+
+/** Detail image returned by GET /api/services/:id/images */
+export interface ServiceImageAdminResponse {
+  id: number;
+  serviceId: string;
+  imageUrl: string;
+  publicId: string | null;
+  sortOrder: number;
 }
 
 // ─── Wallpapers ───────────────────────────────────────────────────────────────
@@ -122,10 +170,8 @@ export interface Faq {
 
 export interface DressCodeItem {
   id: number;
-  label: string;
-  description: string | null;
-  gender: string | null;
-  icon: string | null;
+  section: 'men' | 'women' | 'general';
+  content: string;
   sort_order: number;
   is_active: boolean;
   created_at: string;
@@ -135,7 +181,7 @@ export interface DressCodeItem {
 export interface DosDont {
   id: number;
   type: 'do' | 'dont';
-  text: string;
+  content: string;
   sort_order: number;
   is_active: boolean;
   created_at: string;

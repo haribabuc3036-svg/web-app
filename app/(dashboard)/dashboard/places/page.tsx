@@ -180,45 +180,34 @@ export default function PlacesPage() {
             )}
           </div>
           {!selectedRegion ? (
-            <div className="p-12 text-center text-gray-400 text-sm">? Choose a region</div>
+            <div className="p-12 text-center text-gray-400 text-sm">👈 Choose a region</div>
           ) : placesLoading ? (
             <div className="p-8 text-center"><PageLoader /></div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-gray-100">
-                    {['Name', 'Description', 'Distance', ''].map((h) => (
-                      <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-50">
-                  {places.map((p) => (
-                    <tr key={p.id} className="hover:bg-gray-50">
-                      <td className="px-4 py-3 font-medium text-gray-900">{p.name}</td>
-                      <td className="px-4 py-3 text-gray-500 max-w-xs truncate text-xs">{p.description}</td>
-                      <td className="px-4 py-3 text-gray-600 text-xs">{p.distance_from_tirumala_km} km</td>
-                      <td className="px-4 py-3">
-                        <div className="flex gap-1">
-                          <Button variant="ghost" size="sm" title="Photos" onClick={() => { setSelectedPlace(p); setPlaceModal('photos'); }}>
-                            <ImageIcon size={13} />
-                          </Button>
-                          <Button variant="ghost" size="sm" onClick={() => { setSelectedPlace(p); setPlaceForm({ name: p.name, description: p.description, maps_url: p.maps_url, distance_from_tirumala_km: p.distance_from_tirumala_km, sort_order: p.sort_order }); setPlaceModal('edit'); }}>
-                            <Pencil size={13} />
-                          </Button>
-                          <Button variant="ghost" size="sm" onClick={() => { setSelectedPlace(p); setPlaceModal('delete'); }}>
-                            <Trash2 size={13} className="text-red-400" />
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                  {places.length === 0 && (
-                    <tr><td colSpan={4} className="px-4 py-8 text-center text-gray-400">No places</td></tr>
-                  )}
-                </tbody>
-              </table>
+            <div className="divide-y divide-gray-50">
+              {places.map((p) => (
+                <div key={p.id} className="flex items-start gap-3 px-4 py-3 hover:bg-gray-50 transition-colors">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900">{p.name}</p>
+                    <p className="text-xs text-gray-400 mt-0.5 line-clamp-2">{p.description}</p>
+                    <p className="text-xs text-gray-400 mt-0.5">{p.distance_from_tirumala_km} km from Tirumala</p>
+                  </div>
+                  <div className="flex gap-1 shrink-0">
+                    <Button variant="ghost" size="sm" title="Photos" onClick={() => { setSelectedPlace(p); setPlaceModal('photos'); }}>
+                      <ImageIcon size={13} />
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => { setSelectedPlace(p); setPlaceForm({ name: p.name, description: p.description, maps_url: p.maps_url, distance_from_tirumala_km: p.distance_from_tirumala_km, sort_order: p.sort_order }); setPlaceModal('edit'); }}>
+                      <Pencil size={13} />
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => { setSelectedPlace(p); setPlaceModal('delete'); }}>
+                      <Trash2 size={13} className="text-red-400" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+              {places.length === 0 && (
+                <div className="px-4 py-8 text-center text-gray-400 text-sm">No places</div>
+              )}
             </div>
           )}
         </Card>
@@ -282,28 +271,47 @@ export default function PlacesPage() {
         </div>
       </Modal>
 
-      <Modal open={placeModal === 'photos'} onClose={() => setPlaceModal(null)} title={`Photos: ${selectedPlace?.name}`} size="xl">
+      <Modal open={placeModal === 'photos'} onClose={() => setPlaceModal(null)} title={`Photos: ${selectedPlace?.name}`} size="lg">
         <div className="space-y-4">
-          <form className="flex items-end gap-2" onSubmit={(e) => { e.preventDefault(); uploadPhoto.mutate(); }}>
-            <div className="flex-1">
-              <label className="text-xs font-medium text-gray-500 block mb-1">Upload Photo</label>
-              <input type="file" accept="image/*" onChange={(e) => setPhotoFile(e.target.files?.[0] ?? null)}
-                className="text-sm text-gray-600 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:bg-indigo-50 file:text-indigo-700" />
+          {/* Photo grid */}
+          {photos.length === 0 ? (
+            <p className="text-sm text-gray-400 py-4 text-center">No photos yet</p>
+          ) : (
+            <div className="grid grid-cols-3 gap-3">
+              {photos.map((ph) => (
+                <div key={ph.id} className="relative group rounded-lg overflow-hidden border border-gray-100">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={ph.image_url} alt="place" className="w-full h-32 object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => deletePhoto.mutate(ph.id)}
+                    className="absolute top-1 right-1 p-1 rounded bg-red-500 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                    title="Delete photo"
+                  >
+                    <Trash2 size={12} />
+                  </button>
+                </div>
+              ))}
             </div>
-            <Button type="submit" size="sm" loading={uploadPhoto.isPending} disabled={!photoFile}>Upload</Button>
-          </form>
-          <div className="grid grid-cols-3 gap-2">
-            {photos.map((ph) => (
-              <div key={ph.id} className="relative group">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={ph.image_url} alt="place" className="w-full aspect-square object-cover rounded-lg" />
-                <button
-                  className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
-                  onClick={() => deletePhoto.mutate(ph.id)}
-                >x</button>
+          )}
+
+          {/* Upload new photo */}
+          <div className="border-t border-gray-100 pt-4">
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Add photo</p>
+            <form className="flex items-end gap-3" onSubmit={(e) => { e.preventDefault(); uploadPhoto.mutate(); }}>
+              <div className="flex-1">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setPhotoFile(e.target.files?.[0] ?? null)}
+                  className="w-full text-sm text-gray-600 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-indigo-50 file:text-indigo-700"
+                  required
+                />
               </div>
-            ))}
-            {photos.length === 0 && <p className="col-span-3 text-sm text-gray-400 py-4 text-center">No photos</p>}
+              <Button type="submit" loading={uploadPhoto.isPending} disabled={!photoFile}>
+                <ImageIcon size={14} />Upload
+              </Button>
+            </form>
           </div>
         </div>
       </Modal>

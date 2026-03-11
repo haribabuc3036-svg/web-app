@@ -10,7 +10,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { PageLoader } from '@/components/ui/spinner';
 import { toast } from 'sonner';
-import { Plus, Pencil, Trash2, RefreshCw, Upload } from 'lucide-react';
+import { Plus, Pencil, Trash2, RefreshCw, Upload, Image as ImageIcon } from 'lucide-react';
 import type { SsdLocation } from '@/lib/types';
 
 const emptyForm: Partial<SsdLocation> = {
@@ -57,7 +57,22 @@ export default function SsdLocationsPage() {
 
   const uploadImage = useMutation({
     mutationFn: () => ssdLocationsApi.uploadImage(selected!.id, imageFile!),
-    onSuccess: () => { toast.success('Image uploaded'); qc.invalidateQueries({ queryKey: ['ssd-locations'] }); setModal(null); },
+    onSuccess: (res) => {
+      toast.success('Image uploaded');
+      qc.invalidateQueries({ queryKey: ['ssd-locations'] });
+      setSelected(res.data);
+      setImageFile(null);
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const deleteImage = useMutation({
+    mutationFn: () => ssdLocationsApi.deleteImage(selected!.id),
+    onSuccess: (res) => {
+      toast.success('Image removed');
+      qc.invalidateQueries({ queryKey: ['ssd-locations'] });
+      setSelected(res.data);
+    },
     onError: (e: Error) => toast.error(e.message),
   });
 
@@ -104,52 +119,60 @@ export default function SsdLocationsPage() {
       {isLoading ? (
         <PageLoader />
       ) : (
-        <Card>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-gray-100">
-                  {['#', 'Name', 'Area', 'Timings', 'Tag', 'Sort', 'Status', ''].map((h) => (
-                    <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50">
-                {locations.map((loc) => (
-                  <tr key={loc.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 text-gray-400">{loc.id}</td>
-                    <td className="px-4 py-3 font-medium text-gray-900">
-                      <div className="flex items-center gap-2">
-                        {loc.image_url && (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={loc.image_url} alt={loc.name} className="w-8 h-8 rounded-md object-cover" />
-                        )}
-                        {loc.name}
+        <div className="space-y-3">
+          {locations.map((loc) => (
+            <Card key={loc.id} className="p-0 overflow-hidden">
+              <div className="flex gap-3 p-4">
+                {/* Image or placeholder */}
+                <div className="shrink-0">
+                  {loc.image_url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={loc.image_url} alt={loc.name} className="w-16 h-16 rounded-xl object-cover" />
+                  ) : (
+                    <div className="w-16 h-16 rounded-xl bg-gray-100 flex items-center justify-center">
+                      <ImageIcon size={22} className="text-gray-400" />
+                    </div>
+                  )}
+                </div>
+                {/* Info */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="font-semibold text-gray-900 truncate">{loc.name}</p>
+                      <p className="text-xs text-gray-500 truncate">{loc.area}</p>
+                    </div>
+                    {/* Actions */}
+                    <div className="flex gap-1 shrink-0">
+                      <Button variant="ghost" size="sm" title="Manage image" onClick={() => openImage(loc)}><Upload size={13} /></Button>
+                      <Button variant="ghost" size="sm" onClick={() => openEdit(loc)}><Pencil size={13} /></Button>
+                      <Button variant="ghost" size="sm" onClick={() => openDelete(loc)}><Trash2 size={13} className="text-red-500" /></Button>
+                    </div>
+                  </div>
+                  <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1">
+                    <div>
+                      <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Timings</p>
+                      <p className="text-xs text-gray-700">{loc.timings}</p>
+                    </div>
+                    {loc.note && (
+                      <div>
+                        <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Note</p>
+                        <p className="text-xs text-gray-700 truncate">{loc.note}</p>
                       </div>
-                    </td>
-                    <td className="px-4 py-3 text-gray-600">{loc.area}</td>
-                    <td className="px-4 py-3 text-gray-600">{loc.timings}</td>
-                    <td className="px-4 py-3">{loc.tag && <Badge variant="indigo">{loc.tag}</Badge>}</td>
-                    <td className="px-4 py-3 text-gray-400">{loc.sort_order}</td>
-                    <td className="px-4 py-3">
-                      <Badge variant={loc.is_active ? 'green' : 'red'}>{loc.is_active ? 'Active' : 'Inactive'}</Badge>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex gap-1">
-                        <Button variant="ghost" size="sm" onClick={() => openImage(loc)}><Upload size={13} /></Button>
-                        <Button variant="ghost" size="sm" onClick={() => openEdit(loc)}><Pencil size={13} /></Button>
-                        <Button variant="ghost" size="sm" onClick={() => openDelete(loc)}><Trash2 size={13} className="text-red-500" /></Button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-                {locations.length === 0 && (
-                  <tr><td colSpan={8} className="px-4 py-8 text-center text-gray-400">No locations yet</td></tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </Card>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2 mt-2">
+                    <Badge variant={loc.is_active ? 'green' : 'red'}>{loc.is_active ? 'Active' : 'Inactive'}</Badge>
+                    {loc.tag && <Badge variant="indigo">{loc.tag}</Badge>}
+                    <span className="text-[11px] text-gray-400 ml-auto">Sort: {loc.sort_order}</span>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          ))}
+          {locations.length === 0 && (
+            <Card className="py-12 text-center text-gray-400 text-sm">No locations yet</Card>
+          )}
+        </div>
       )}
 
       {/* Create Modal */}
@@ -183,19 +206,57 @@ export default function SsdLocationsPage() {
         </div>
       </Modal>
 
-      {/* Image Upload Modal */}
-      <Modal open={modal === 'image'} onClose={() => setModal(null)} title={`Upload Image: ${selected?.name}`} size="sm">
-        <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); uploadImage.mutate(); }}>
-          <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium text-gray-700">Image</label>
-            <input type="file" accept="image/*" onChange={(e) => setImageFile(e.target.files?.[0] ?? null)}
-              className="text-sm text-gray-600 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-indigo-50 file:text-indigo-700" required />
+      {/* Image Modal */}
+      <Modal open={modal === 'image'} onClose={() => setModal(null)} title={`Image: ${selected?.name}`}>
+        <div className="space-y-5">
+          {/* Current image */}
+          <div>
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Current Image</p>
+            {selected?.image_url ? (
+              <div className="relative group w-full rounded-xl overflow-hidden border border-gray-100">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={selected.image_url} alt={selected.name} className="w-full h-48 object-cover" />
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <Button
+                    variant="danger"
+                    size="sm"
+                    loading={deleteImage.isPending}
+                    onClick={() => deleteImage.mutate()}
+                  >
+                    <Trash2 size={14} /> Remove
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center gap-2 w-full h-32 rounded-xl border-2 border-dashed border-gray-200 text-gray-400">
+                <ImageIcon size={28} />
+                <span className="text-xs">No image</span>
+              </div>
+            )}
           </div>
-          <div className="flex justify-end gap-2 pt-2">
-            <Button variant="outline" type="button" onClick={() => setModal(null)}>Cancel</Button>
-            <Button type="submit" loading={uploadImage.isPending} disabled={!imageFile}><Upload size={14} />Upload</Button>
+          {/* Upload new */}
+          <div className="border-t border-gray-100 pt-4">
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+              {selected?.image_url ? 'Replace Image' : 'Upload Image'}
+            </p>
+            <form
+              className="space-y-3"
+              onSubmit={(e) => { e.preventDefault(); uploadImage.mutate(); }}
+            >
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => setImageFile(e.target.files?.[0] ?? null)}
+                className="w-full text-sm text-gray-600 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-indigo-50 file:text-indigo-700"
+              />
+              <div className="flex justify-end">
+                <Button type="submit" loading={uploadImage.isPending} disabled={!imageFile}>
+                  <Upload size={14} /> Upload
+                </Button>
+              </div>
+            </form>
           </div>
-        </form>
+        </div>
       </Modal>
     </div>
   );

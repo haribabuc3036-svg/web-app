@@ -8,6 +8,9 @@ import type {
   Place,
   PlacePhoto,
   ServiceCatalogItem,
+  ServiceCategoryResponse,
+  ServiceDetailResponse,
+  ServiceImageAdminResponse,
   Wallpaper,
   Faq,
   DressCodeItem,
@@ -172,8 +175,8 @@ export const placesApi = {
     );
   },
 
-  deletePhoto: (placeId: string, photoId: number) =>
-    req<{ success: boolean }>(`/api/places/${placeId}/photos/${photoId}`, {
+  deletePhoto: (_placeId: string, photoId: number) =>
+    req<{ success: boolean }>(`/api/places/photos/${photoId}`, {
       method: 'DELETE',
     }),
 };
@@ -182,16 +185,46 @@ export const placesApi = {
 
 export const servicesApi = {
   getCatalog: () =>
-    req<{ success: boolean; count: number; data: ServiceCatalogItem[] }>('/api/services'),
+    req<{ success: boolean; count: number; data: ServiceCategoryResponse[] }>('/api/services'),
 
   getById: (id: string) =>
-    req<{ success: boolean; data: ServiceCatalogItem }>(`/api/services/${id}`),
+    req<{ success: boolean; data: ServiceDetailResponse }>(`/api/services/${id}`),
 
   update: (id: string, payload: Partial<ServiceCatalogItem>) =>
     req<{ success: boolean; data: ServiceCatalogItem }>(`/api/services/${id}`, {
       method: 'PUT',
       body: JSON.stringify(payload),
     }),
+
+  patchBooking: (id: string, payload: { booking_date?: string | null; instructions?: string[] | null }) =>
+    req<{ success: boolean; data: ServiceCatalogItem }>(`/api/services/${id}/booking`, {
+      method: 'PATCH',
+      body: JSON.stringify(payload),
+    }),
+
+  getImages: (id: string) =>
+    req<{ success: boolean; count: number; data: ServiceImageAdminResponse[] }>(`/api/services/${id}/images`),
+
+  uploadImage: (id: string, file: File) => {
+    const fd = new FormData();
+    fd.append('image', file);
+    return reqForm<{ success: boolean; data: ServiceImageAdminResponse }>(
+      `/api/services/${id}/images`,
+      fd
+    );
+  },
+
+  deleteImage: (imageId: number) =>
+    req<{ success: boolean }>(`/api/services/images/${imageId}`, { method: 'DELETE' }),
+
+  uploadIconImage: (id: string, file: File) => {
+    const fd = new FormData();
+    fd.append('image', file);
+    return reqForm<{ success: boolean; data: ServiceCatalogItem }>(
+      `/api/services/${id}/icon-image`,
+      fd
+    );
+  },
 
   sync: () =>
     req<{ success: boolean }>('/api/services/sync', { method: 'POST' }),
@@ -204,6 +237,26 @@ export const servicesApi = {
       fd
     );
   },
+
+  createService: (payload: {
+    id: string;
+    title: string;
+    category_id: string;
+    category_heading: string;
+    description?: string;
+    icon?: string;
+    tag?: string | null;
+    tag_color?: string | null;
+    url?: string;
+    sort_order?: number;
+  }) =>
+    req<{ success: boolean; data: ServiceCatalogItem }>('/api/services', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+
+  deleteService: (id: string) =>
+    req<{ success: boolean; deleted: boolean; id: string }>(`/api/services/${id}`, { method: 'DELETE' }),
 };
 
 // ─── Wallpapers ───────────────────────────────────────────────────────────────
@@ -325,6 +378,11 @@ export const ssdLocationsApi = {
       fd
     );
   },
+
+  deleteImage: (id: number) =>
+    req<{ success: boolean; data: SsdLocation }>(`/api/ssd-locations/${id}/image`, {
+      method: 'DELETE',
+    }),
 };
 
 // ─── Scraper ──────────────────────────────────────────────────────────────────

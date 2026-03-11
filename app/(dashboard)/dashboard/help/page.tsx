@@ -85,7 +85,7 @@ function DressCodeTab() {
   const qc = useQueryClient();
   const [modal, setModal] = useState<'create' | 'edit' | 'delete' | null>(null);
   const [selected, setSelected] = useState<DressCodeItem | null>(null);
-  const [form, setForm] = useState({ label: '', description: '' as string | null, gender: '' as string | null, icon: '' as string | null, sort_order: 0, is_active: true });
+  const [form, setForm] = useState<{ section: 'men' | 'women' | 'general'; content: string; sort_order: number; is_active: boolean }>({ section: 'men', content: '', sort_order: 0, is_active: true });
 
   const { data, isLoading, refetch } = useQuery({ queryKey: ['dresscode'], queryFn: () => helpApi.getDressCode() });
   const create = useMutation({ mutationFn: () => helpApi.createDressCode(form), onSuccess: () => { toast.success('Created'); qc.invalidateQueries({ queryKey: ['dresscode'] }); setModal(null); }, onError: (e: Error) => toast.error(e.message) });
@@ -95,16 +95,19 @@ function DressCodeTab() {
   const items = data?.data ?? [];
   const Form = () => (
     <div className="space-y-3">
-      <Input label="Label" value={form.label} onChange={(e) => setForm((f) => ({ ...f, label: e.target.value }))} required />
-      <Textarea label="Description" value={form.description ?? ''} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} rows={3} />
+      <div>
+        <label className="text-sm font-medium text-gray-700">Section</label>
+        <select value={form.section} onChange={(e) => setForm((f) => ({ ...f, section: e.target.value as 'men' | 'women' | 'general' }))} className="mt-1 block w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20">
+          <option value="men">Men</option><option value="women">Women</option><option value="general">General</option>
+        </select>
+      </div>
+      <Textarea label="Content" value={form.content} onChange={(e) => setForm((f) => ({ ...f, content: e.target.value }))} required rows={3} />
       <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label className="text-sm font-medium text-gray-700">Gender</label>
-          <select value={form.gender ?? ''} onChange={(e) => setForm((f) => ({ ...f, gender: e.target.value || null }))} className="mt-1 block w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20">
-            <option value="">All</option><option value="male">Male</option><option value="female">Female</option>
-          </select>
-        </div>
         <Input label="Sort Order" type="number" value={form.sort_order} onChange={(e) => setForm((f) => ({ ...f, sort_order: Number(e.target.value) }))} />
+        <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer self-end pb-1">
+          <input type="checkbox" checked={form.is_active} onChange={(e) => setForm((f) => ({ ...f, is_active: e.target.checked }))} className="rounded" />
+          Active
+        </label>
       </div>
     </div>
   );
@@ -114,7 +117,7 @@ function DressCodeTab() {
         <p className="text-sm text-gray-500">{items.length} rules</p>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={() => refetch()}><RefreshCw size={13} />Refresh</Button>
-          <Button size="sm" onClick={() => { setForm({ label: '', description: null, gender: null, icon: null, sort_order: 0, is_active: true }); setModal('create'); }}><Plus size={13} />Add</Button>
+          <Button size="sm" onClick={() => { setForm({ section: 'men', content: '', sort_order: 0, is_active: true }); setModal('create'); }}><Plus size={13} />Add</Button>
         </div>
       </div>
       {isLoading ? <PageLoader /> : (
@@ -122,12 +125,11 @@ function DressCodeTab() {
           {items.map((item) => (
             <div key={item.id} className="flex items-start justify-between px-4 py-3 gap-3">
               <div className="flex-1">
-                {item.gender && <Badge variant="blue" className="mb-1 text-xs">{item.gender}</Badge>}
-                <p className="text-sm font-medium text-gray-900">{item.label}</p>
-                {item.description && <p className="text-xs text-gray-500 mt-0.5">{item.description}</p>}
+                <Badge variant="blue" className="mb-1 text-xs">{item.section}</Badge>
+                <p className="text-sm font-medium text-gray-900">{item.content}</p>
               </div>
               <div className="flex gap-1 shrink-0">
-                <Button variant="ghost" size="sm" onClick={() => { setSelected(item); setForm({ label: item.label, description: item.description, gender: item.gender, icon: item.icon, sort_order: item.sort_order, is_active: item.is_active }); setModal('edit'); }}><Pencil size={13} /></Button>
+                <Button variant="ghost" size="sm" onClick={() => { setSelected(item); setForm({ section: item.section, content: item.content, sort_order: item.sort_order, is_active: item.is_active }); setModal('edit'); }}><Pencil size={13} /></Button>
                 <Button variant="ghost" size="sm" onClick={() => { setSelected(item); setModal('delete'); }}><Trash2 size={13} className="text-red-400" /></Button>
               </div>
             </div>
@@ -146,7 +148,7 @@ function DosDontsTab() {
   const qc = useQueryClient();
   const [modal, setModal] = useState<'create' | 'edit' | 'delete' | null>(null);
   const [selected, setSelected] = useState<DosDont | null>(null);
-  const [form, setForm] = useState<{ type: 'do' | 'dont'; text: string; sort_order: number; is_active: boolean }>({ type: 'do', text: '', sort_order: 0, is_active: true });
+  const [form, setForm] = useState<{ type: 'do' | 'dont'; content: string; sort_order: number; is_active: boolean }>({ type: 'do', content: '', sort_order: 0, is_active: true });
 
   const { data, isLoading, refetch } = useQuery({ queryKey: ['dosdont'], queryFn: () => helpApi.getDosDonts() });
   const create = useMutation({ mutationFn: () => helpApi.createDosDont(form), onSuccess: () => { toast.success('Created'); qc.invalidateQueries({ queryKey: ['dosdont'] }); setModal(null); }, onError: (e: Error) => toast.error(e.message) });
@@ -165,7 +167,7 @@ function DosDontsTab() {
           <option value="do">Do</option><option value="dont">Dont</option>
         </select>
       </div>
-      <Textarea label="Text" value={form.text} onChange={(e) => setForm((f) => ({ ...f, text: e.target.value }))} required rows={3} />
+      <Textarea label="Content" value={form.content} onChange={(e) => setForm((f) => ({ ...f, content: e.target.value }))} required rows={3} />
       <Input label="Sort Order" type="number" value={form.sort_order} onChange={(e) => setForm((f) => ({ ...f, sort_order: Number(e.target.value) }))} />
     </div>
   );
@@ -178,9 +180,9 @@ function DosDontsTab() {
       <div className="divide-y divide-gray-50">
         {list.map((item) => (
           <div key={item.id} className="flex items-start justify-between px-4 py-3 gap-2">
-            <p className="text-sm text-gray-700 flex-1">{item.text}</p>
+            <p className="text-sm text-gray-700 flex-1">{item.content}</p>
             <div className="flex gap-1 shrink-0">
-              <Button variant="ghost" size="sm" onClick={() => { setSelected(item); setForm({ type: item.type, text: item.text, sort_order: item.sort_order, is_active: item.is_active }); setModal('edit'); }}><Pencil size={13} /></Button>
+              <Button variant="ghost" size="sm" onClick={() => { setSelected(item); setForm({ type: item.type, content: item.content, sort_order: item.sort_order, is_active: item.is_active }); setModal('edit'); }}><Pencil size={13} /></Button>
               <Button variant="ghost" size="sm" onClick={() => { setSelected(item); setModal('delete'); }}><Trash2 size={13} className="text-red-400" /></Button>
             </div>
           </div>
@@ -196,7 +198,7 @@ function DosDontsTab() {
         <p className="text-sm text-gray-500">{dos.length} dos, {donts.length} donts</p>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={() => refetch()}><RefreshCw size={13} />Refresh</Button>
-          <Button size="sm" onClick={() => { setForm({ type: 'do', text: '', sort_order: 0, is_active: true }); setModal('create'); }}><Plus size={13} />Add</Button>
+          <Button size="sm" onClick={() => { setForm({ type: 'do', content: '', sort_order: 0, is_active: true }); setModal('create'); }}><Plus size={13} />Add</Button>
         </div>
       </div>
       {isLoading ? <PageLoader /> : (
@@ -280,10 +282,10 @@ export default function HelpPage() {
         <h1 className="text-2xl font-bold text-gray-900">Help Content</h1>
         <p className="text-sm text-gray-500 mt-1">Manage FAQs, dress code rules, dos and donts, and contact info</p>
       </div>
-      <div className="border-b border-gray-200">
-        <nav className="flex gap-1">
+      <div className="border-b border-gray-200 overflow-x-auto">
+        <nav className="flex gap-1 min-w-max">
           {TABS.map((t) => (
-            <button key={t.id} onClick={() => setTab(t.id)} className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${tab === t.id ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>
+            <button key={t.id} onClick={() => setTab(t.id)} className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${tab === t.id ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>
               {t.label}
             </button>
           ))}
