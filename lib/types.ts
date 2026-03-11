@@ -133,6 +133,10 @@ export interface ServiceDetailResponse {
   /** Full array of scheduled booking dates (ISO strings) for the year. */
   bookingDates?: string[] | null;
   instructions?: string[] | null;
+  /** Custom CTA button label (default: "Check Availability"). */
+  buttonText?: string | null;
+  /** Custom CTA URL (overrides the service url when set). */
+  buttonUrl?: string | null;
 }
 
 /** Detail image returned by GET /api/services/:id/images */
