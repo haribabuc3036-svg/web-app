@@ -98,7 +98,7 @@ function DressCodeTab() {
       <div>
         <label className="text-sm font-medium text-gray-700">Section</label>
         <select value={form.section} onChange={(e) => setForm((f) => ({ ...f, section: e.target.value as 'men' | 'women' | 'general' }))} className="mt-1 block w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20">
-          <option value="men">Men</option><option value="women">Women</option><option value="general">General</option>
+          <option value="men">Mens</option><option value="women">Women</option><option value="general">General</option>
         </select>
       </div>
       <Textarea label="Content" value={form.content} onChange={(e) => setForm((f) => ({ ...f, content: e.target.value }))} required rows={3} />
