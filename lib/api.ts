@@ -404,3 +404,14 @@ export const scraperApi = {
       { method: 'POST' }
     ),
 };
+
+export const notificationsApi = {
+  send: (payload: { title: string; body: string; data?: Record<string, string> }) =>
+    req<{ success: boolean; successCount: number; failureCount: number }>(
+      '/api/notifications/send',
+      { method: 'POST', body: JSON.stringify(payload) }
+    ),
+
+  count: () =>
+    req<{ success: boolean; count: number }>('/api/notifications/count'),
+};
