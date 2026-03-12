@@ -15,6 +15,7 @@ import {
   HelpCircle,
   Navigation,
   Cpu,
+  Bell,
   LogOut,
   Menu,
   X,
@@ -32,6 +33,7 @@ const navItems = [
   { href: '/dashboard/help', label: 'Help Content', icon: HelpCircle },
   { href: '/dashboard/ssd-locations', label: 'SSD Locations', icon: Navigation },
   { href: '/dashboard/scraper', label: 'Scraper', icon: Cpu },
+  { href: '/dashboard/notifications', label: 'Notifications', icon: Bell },
 ];
 
 export function Sidebar() {
